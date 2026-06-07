@@ -88,7 +88,7 @@ h2 = project_overview_name @project, @dashboard
     span.icon.icon-lock
       = sprite_icon 'lock', l(:text_project_closed)
 
-= render 'common/dashboard', dashboard: @dashboard
+= render 'common/dashboard', dashboard: @dashboard if @dashboard.present?
 = content_for :render_async
 
 javascript:

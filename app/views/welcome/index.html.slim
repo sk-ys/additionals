@@ -48,7 +48,7 @@ h2 = welcome_overview_name @dashboard
 
 = call_hook :view_welcome_index_top
 
-= render 'common/dashboard', dashboard: @dashboard
+= render 'common/dashboard', dashboard: @dashboard if @dashboard.present?
 = content_for :render_async
 
 = call_hook :view_welcome_index_bottom

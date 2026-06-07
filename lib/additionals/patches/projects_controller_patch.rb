@@ -39,6 +39,8 @@ module Additionals
             @dashboard = Dashboard.default DashboardContentProject::TYPE_NAME, @project
           end
 
+          return unless @dashboard
+
           @dashboard.content_project = @project
           recently_used_dashboard_save @dashboard, @project
           @can_edit = @dashboard.editable?

@@ -33,6 +33,8 @@ module DashboardsHelper
   end
 
   def dashboard_css_classes(dashboard)
+    return 'dashboard' if dashboard.blank?
+
     classes = ['dashboard', dashboard.dashboard_type.underscore, "dashboard-#{dashboard.id}"]
     safe_join classes, ' '
   end
@@ -45,6 +47,8 @@ module DashboardsHelper
               scope.where(project_id: project.id)
                    .or(scope.where(project_id: nil))
             else
+              return [] if dashboard.blank?
+
               scope.where dashboard_type: dashboard.dashboard_type
             end
 
@@ -52,6 +56,8 @@ module DashboardsHelper
   end
 
   def render_dashboard_actionlist(active_dashboard, project = nil)
+    return ''.html_safe if active_dashboard.blank?
+
     dashboards = sidebar_dashboards active_dashboard, project
     base_css = 'icon icon-dashboard'
     out = []
@@ -86,7 +92,7 @@ module DashboardsHelper
                            dashboards.select(&:public?),
                            project)]
 
-    out << dashboard_info(dashboard) if dashboard.always_expose? || !dashboard.system_default
+    out << dashboard_info(dashboard) if dashboard.present? && (dashboard.always_expose? || !dashboard.system_default)
 
     safe_join out
   end
@@ -489,12 +495,14 @@ module DashboardsHelper
   end
 
   def recently_used_dashboard_save(dashboard, project = nil)
+    return if dashboard.blank?
+
     user = User.current
     dashboard_type = dashboard.dashboard_type
     recently_id = user.pref.recently_used_dashboard dashboard_type, project
     return if recently_id == dashboard.id || user.anonymous?
 
-    if dashboard_type == DashboardContentProject::TYPE_NAME
+    if dashboard_type == DashboardContentProject::TYPE_NAME && project.present?
       user.pref.recently_used_dashboards[dashboard_type] = {} if user.pref.recently_used_dashboards[dashboard_type].nil?
       user.pref.recently_used_dashboards[dashboard_type][project.id] = dashboard.id
     else
