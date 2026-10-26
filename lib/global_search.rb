@@ -104,8 +104,20 @@ module GlobalSearch
       tokens.present? && tokens.none? { |token| token.match? FULL_TEXT_WORD }
     end
 
+    # Narrow down the search types to handle cases where other plugins add new search types
+    def available_search_types
+      Redmine::Search.available_search_types.select do |type|
+        klass = type.singularize.classify.safe_constantize
+
+        supported = klass &&
+                    klass.respond_to?(:search_result_ranks_and_ids) &&
+                    klass.respond_to?(:search_results_from_ids)
+        supported
+      end
+    end
+
     def searchable_classes(types: nil)
-      search_types = types.present? ? Array(types) & Redmine::Search.available_search_types : Redmine::Search.available_search_types
+      search_types = types.present? ? Array(types) & available_search_types : available_search_types
       search_types.filter_map do |type|
         type.singularize.classify.safe_constantize
       end
@@ -123,7 +135,7 @@ module GlobalSearch
     end
 
     def keyword_search(query, user:, projects: nil, types: nil, titles_only: false, limit: 10)
-      scope = types.present? ? Array(types) & Redmine::Search.available_search_types : Redmine::Search.available_search_types
+      scope = types.present? ? Array(types) & available_search_types : available_search_types
       # live_search: true marks this as a live preview call (modal autocomplete),
       # distinct from the full /search page. Nothing evaluates it yet, neither Redmine
       # nor a plugin. It stays on purpose as the hook for faster query strategies.
